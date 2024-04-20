@@ -1,0 +1,73 @@
+@startuml dashboard
+
+class User {
+    - id: int
+    - name: String
+    - email: String
+    - password: String
+    + register(name: String, email: String, password: String): void
+    + login(email: String, password: String): void
+    + logout(): void
+    + recoverPassword(email: String): void
+    + updateProfile(newName: String, newEmail: String): void
+}
+
+class Task {
+    - id: int
+    - description: String
+    - dueDate: Date
+    - priority: int
+    - completed: boolean
+}
+class TaskList{
+    - name : String
+}
+class Note{
+     - Name : String
+     - content: String
+}
+
+class Equipment <<Entity>> {
+    - id: int
+    - name: String
+    - state: boolean
+    - consumption: String
+    - SerialNumber: String
+}
+
+class LightManager {
+    + turnOnLights(): void
+    + turnOffLights(): void
+}
+class DeviceManager {
+    + turnOn(): void
+    + turnOff(): void
+}
+
+class Light {
+    
+    - intensity: int
+    - color: String
+}
+
+class Device {
+}
+
+LightManager --> Light
+DeviceManager --> Device
+
+User "1" -- "*" TaskList
+User "1" -- "*" Note
+TaskList "0..1" o-- "*" Task
+
+Light --|> Equipment
+Device --|> Equipment
+
+class Dashboard {
+}
+
+Dashboard --> LightManager
+Dashboard --> DeviceManager
+Dashboard --> User
+
+@enduml
