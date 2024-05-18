@@ -17,11 +17,14 @@ import {
   useInsertDataHueMutation,
   useGetDataHueLightsQuery,
   useModifyStatusHueLightsMutation,
+  useModifyBrightnessAllHueLightsMutation,
+  useGetDevicesQuery,
 } from "../../slice/lightApiSlice";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { jwtDecode } from "jwt-decode";
 import ToggleSwitch from "../../component/toggleSwitch";
+import BrightnessSlider from "../../component/brightnessSlider"; // Importer le composant BrightnessSlider
 
 const Light = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -35,15 +38,67 @@ const Light = ({ navigation }) => {
   const [insertDataHue] = useInsertDataHueMutation();
   const globalToggleState = dataStateHue.every((item) => item.state === 1);
   const [modifyStatusHueLights] = useModifyStatusHueLightsMutation();
+  const [brightness, setBrightness] = useState(200); // Valeur initiale de la luminosité
 
   useEffect(() => {
     // Effectuez ici toutes les actions nécessaires lorsque les données des lampes sont récupérées
     if (getDataHueLights) {
       // Mettre à jour l'état des données des lampes
       setDataStateHue(getDataHueLights);
-      console.log("getDataHueLights", getDataHueLights);
     }
   }, [getDataHueLights]);
+  const handleBrightnessChange = (value) => {
+    console.log("Brightness value:", value);
+    dataStateHue.forEach((item) => {
+      setLightBrightness(item.id_light, value);
+    });
+    setBrightness(value); // Mise à jour de l'état local de la luminosité
+  };
+  const setLightBrightness = async (id_light, value) => {
+    const bridgeIpAddress = bridgeIp?.[0]?.internalipaddress;
+    const username = hueBridgeToken?.[0]?.username;
+
+    if (!bridgeIpAddress) {
+      console.error("Bridge IP not found");
+      return;
+    }
+    if (!username) {
+      console.error("Hue Bridge Token not found");
+      return;
+    }
+
+    const url = `http://${bridgeIpAddress}/api/${username}/lights/${id_light}/state`;
+    const brightness = Math.floor(value);
+
+    const body = JSON.stringify({ bri: brightness });
+    try {
+      const response = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: body,
+      });
+      const data = await response.json();
+      console.log(`Set light brightness response for light ${id_light}:`, data);
+
+      if (response.ok) {
+        // Si la requête a réussi, mettre à jour l'état local
+        setDataStateHue((prevState) =>
+          prevState.map((light) =>
+            light.id_light === id_light ? { ...light, bri: value } : light
+          )
+        );
+      } else {
+        throw new Error(`Failed to set brightness for light ${id_light}.`);
+      }
+    } catch (error) {
+      console.error(
+        `Error setting light brightness for light ${id_light}:`,
+        error
+      );
+    }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -215,8 +270,8 @@ const Light = ({ navigation }) => {
       console.error("Error toggling light state:", error);
     }
   };
+
   useEffect(() => {
-    console.log("dataStateHue updated:", dataStateHue);
     // Appeler modifyStatusHueLights ici si nécessaire
   }, [dataStateHue]);
 
@@ -242,20 +297,17 @@ const Light = ({ navigation }) => {
         <Text style={styles.title}>Lumières</Text>
       </View>
       <TouchableOpacity style={styles.containerCard}>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: 16,
-          }}
-        >
-          <Text style={{ color: "white" }}>Phillips Hue Lights</Text>
+        <View style={styles.row}>
+          <Text style={styles.text}>Phillips Hue Lights</Text>
           <ToggleSwitch
             initialValue={globalToggleState}
             onToggle={handleGlobalToggle}
           />
         </View>
+        <BrightnessSlider
+          brightness={brightness}
+          onBrightnessChange={handleBrightnessChange}
+        />
       </TouchableOpacity>
 
       <View style={styles.navbarbottom}>
@@ -370,6 +422,19 @@ const styles = StyleSheet.create({
     padding: 10,
     marginTop: 20,
     width: "100%",
+  },
+  row: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    padding: 16,
+  },
+  text: {
+    color: "white",
+  },
+  slider: {
+    width: "100%",
+    marginTop: 10,
   },
   centeredView: {
     height: "100%",
