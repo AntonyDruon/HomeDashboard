@@ -10,43 +10,20 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import logo from "../../../assets/logohomedashboarddarkmode.png";
+import { useSignUpMutation } from "../../slice/userApiSlice";
 
 const SignUpScreen = ({ navigation }) => {
-  const [fullName, setFullName] = useState("");
+  const [username, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [signUp] = useSignUpMutation();
 
-  const handleSignUp = () => {
-    console.log("test");
-    fetch("http://192.168.1.69:3000/users/new", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        username: fullName,
-        email,
-        password,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Inscription échouée");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        // Inscription réussie
-        console.log("Utilisateur créé avec succès:", data);
-        // Rediriger l'utilisateur vers une autre page par exemple
-      })
-      .catch((error) => {
-        // Erreur lors de l'inscription
-        console.error("Erreur lors de l'inscription:", error);
-        // Afficher un message d'erreur à l'utilisateur ou effectuer une action appropriée
-      });
+  const handleSignUp = async () => {
+    const response = await signUp({ username, email, password });
+    signUp({ username, email, password });
+    console.log(response);
+    navigation.navigate("SignIn");
   };
-
   const goToSignIn = () => {
     navigation.navigate("SignIn");
   };
@@ -67,7 +44,7 @@ const SignUpScreen = ({ navigation }) => {
         style={styles.input}
         placeholder="Pseudo"
         onChangeText={setFullName}
-        value={fullName}
+        value={username}
         autoCapitalize="words"
       />
       <TextInput

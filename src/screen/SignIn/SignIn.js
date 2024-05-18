@@ -9,13 +9,33 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import logo from "../../../assets/logohomedashboarddarkmode.png";
+import { useLoginMutation } from "../../slice/authApiSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [login] = useLoginMutation();
+  const handleLogin = async () => {
+    try {
+      const response = await login({ email, password });
 
-  const handleLogin = () => {
-    // Logique de connexion
+      if (response && response.data && response.data.token) {
+        const token = response.data.token;
+        console.log(token);
+
+        // Stocker le jeton dans AsyncStorage
+        await AsyncStorage.setItem("authToken", token);
+
+        // Rediriger l'utilisateur vers la page suivante, par exemple SignIn
+        navigation.navigate("Dashboard");
+      } else {
+        console.error("Error during login: Response or token is undefined.");
+      }
+    } catch (error) {
+      console.error("Error during login:", error);
+      // Gérer les erreurs de connexion
+    }
   };
   const handlePassword = () => {
     // Logique de connexion
