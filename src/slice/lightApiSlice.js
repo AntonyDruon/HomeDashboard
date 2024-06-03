@@ -2,6 +2,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import env from "../../env";
 const baseUrl = env.REACT_APP_API_BASE_URL;
+const nanoleafIP = env.NANOLEAF_IP;
 
 export const lightApiSlice = createApi({
   reducerPath: "lightApi",

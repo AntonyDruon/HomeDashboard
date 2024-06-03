@@ -10,6 +10,8 @@
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "1.23.1",
+    "@react-native-community/checkbox": "^0.5.17",
+    "@react-native-community/slider": "4.5.2",
     "@react-native-vector-icons/material-icons": "^0.0.1-alpha.8",
     "@react-navigation/native": "^6.1.17",
     "@react-navigation/stack": "^6.3.29",
@@ -21,13 +23,17 @@
     "jwt-decode": "^4.0.0",
     "react": "18.2.0",
     "react-native": "0.74.1",
+    "react-native-color-picker": "^0.6.0",
     "react-native-gesture-handler": "~2.16.1",
     "react-native-linear-gradient": "^2.8.3",
+    "react-native-reanimated": "~3.10.1",
     "react-native-safe-area-context": "4.10.1",
     "react-native-screens": "3.31.1",
     "react-redux": "^9.1.1",
+    "reanimated-color-picker": "^3.0.3",
     "redux": "^5.0.1",
-    "@react-native-community/slider": "4.5.2"
+    "tinycolor2": "^1.6.0",
+    "expo-checkbox": "~3.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
