@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   Text,
   Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import logo from "../../../assets/logohomedashboarddarkmode.png";
@@ -18,12 +19,33 @@ const SignUpScreen = ({ navigation }) => {
   const [password, setPassword] = useState("");
   const [signUp] = useSignUpMutation();
 
-  const handleSignUp = async () => {
-    const response = await signUp({ username, email, password });
-    signUp({ username, email, password });
-    console.log(response);
-    navigation.navigate("SignIn");
+  // Fonction de validation du mot de passe
+  const validatePassword = (password) => {
+    const regex = /^(?=.*[A-Z])(?=.*[!@#$%^&*])(?=.{6,})/;
+    return regex.test(password);
   };
+
+  const handleSignUp = async () => {
+    // Valider le mot de passe avant de procéder à l'inscription
+    if (!validatePassword(password)) {
+      Alert.alert(
+        "Erreur de validation",
+        "Le mot de passe doit comporter au moins 6 caractères, inclure une majuscule et un caractère spécial."
+      );
+      return;
+    }
+
+    // Si la validation passe, procède à l'inscription
+    try {
+      const response = await signUp({ username, email, password });
+      console.log(response);
+      navigation.navigate("SignIn");
+    } catch (error) {
+      console.error("Erreur d'inscription:", error);
+      Alert.alert("Erreur", "Un problème est survenu lors de l'inscription.");
+    }
+  };
+
   const goToSignIn = () => {
     navigation.navigate("SignIn");
   };
@@ -102,12 +124,12 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    backgroundColor: "#FFF", // Ajout d'un fond blanc pour TextInput
+    backgroundColor: "#FFF",
   },
   button: {
     borderRadius: 5,
-    flex: 1, // Utilisez flex: 1 pour que le bouton occupe tout l'espace disponible dans le conteneur parent
-    marginHorizontal: 5, // Ajoute une marge horizontale entre les boutons
+    flex: 1,
+    marginHorizontal: 5,
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
@@ -117,9 +139,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
-
   buttonContainer: {
-    flex: 1, // Utilisez flex: 1 pour que le TouchableOpacity occupe tout l'espace disponible dans le conteneur parent
+    flex: 1,
   },
   buttonSignUp: {
     backgroundColor: "#9124B6",
@@ -153,8 +174,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: "90%", // Prend 70% de la largeur de l'écran
-    aspectRatio: 1.2, // Garde le ratio d'aspect de l'image pour une hauteur proportionnelle
+    width: "90%",
+    aspectRatio: 1.2,
     resizeMode: "contain",
   },
 });

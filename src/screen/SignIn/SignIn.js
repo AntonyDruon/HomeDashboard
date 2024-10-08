@@ -6,6 +6,7 @@ import {
   Text,
   StyleSheet,
   Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import logo from "../../../assets/logohomedashboarddarkmode.png";
@@ -16,29 +17,65 @@ const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [login] = useLoginMutation();
+  const [attempts, setAttempts] = useState(0); // Suivre le nombre de tentatives
+  const [isBlocked, setIsBlocked] = useState(false); // Bloquer après plusieurs tentatives
+  const [remainingTime, setRemainingTime] = useState(0); // Temps d'attente
+  const [penaltyTime, setPenaltyTime] = useState(10); // Temps de blocage actuel
+
+  // Fonction pour gérer la tentative de connexion
   const handleLogin = async () => {
+    if (isBlocked) {
+      Alert.alert(
+        "Trop de tentatives",
+        `Vous devez attendre ${remainingTime} secondes avant de réessayer.`
+      );
+      return;
+    }
+
     try {
       const response = await login({ email, password });
 
       if (response && response.data && response.data.token) {
         const token = response.data.token;
-        console.log(token);
-
-        // Stocker le jeton dans AsyncStorage
         await AsyncStorage.setItem("authToken", token);
-
-        // Rediriger l'utilisateur vers la page suivante, par exemple SignIn
         navigation.navigate("Dashboard");
+        // Réinitialiser le compteur de tentatives et le blocage après une réussite
+        setAttempts(0);
+        setPenaltyTime(10); // Réinitialise le temps d'attente
       } else {
-        console.error("Error during login: Response or token is undefined.");
+        throw new Error("Invalid credentials");
       }
     } catch (error) {
-      console.error("Error during login:", error);
-      // Gérer les erreurs de connexion
+      setAttempts((prev) => prev + 1); // Incrémenter le nombre de tentatives
+
+      if ((attempts + 1) % 3 === 0) {
+        blockLogin(); // Bloquer après chaque série de 3 tentatives
+      } else {
+        Alert.alert("Erreur de connexion", "Email ou mot de passe incorrect.");
+      }
     }
   };
+
+  // Fonction pour bloquer la connexion pendant un certain temps
+  const blockLogin = () => {
+    setIsBlocked(true);
+    setRemainingTime(penaltyTime);
+
+    // Décompte du temps d'attente
+    const interval = setInterval(() => {
+      setRemainingTime((time) => {
+        if (time <= 1) {
+          clearInterval(interval);
+          setIsBlocked(false);
+          setPenaltyTime((prevTime) => prevTime * 3); // Multiplie le temps de blocage par 3
+        }
+        return time - 1;
+      });
+    }, 1000);
+  };
+
   const handlePassword = () => {
-    // Logique de connexion
+    // Logique de récupération de mot de passe oublié
   };
 
   const navigateToSignUp = () => {
@@ -72,10 +109,23 @@ const LoginScreen = ({ navigation }) => {
         value={password}
         secureTextEntry
       />
-      <TouchableOpacity style={styles.buttonPassword} onPress={handlePassword}>
+      {isBlocked && (
+        <Text style={styles.blockedText}>
+          Vous devez attendre {remainingTime} secondes avant de réessayer.
+        </Text>
+      )}
+      <TouchableOpacity
+        style={styles.buttonPassword}
+        onPress={handlePassword}
+        disabled={isBlocked} // Désactiver si l'utilisateur est bloqué
+      >
         <Text style={styles.buttonTextPassword}>Mot de passe oublié ?</Text>
       </TouchableOpacity>
-      <TouchableOpacity style={styles.button} onPress={handleLogin}>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={handleLogin}
+        disabled={isBlocked} // Désactiver si l'utilisateur est bloqué
+      >
         <Text style={styles.buttonText}>Connexion</Text>
       </TouchableOpacity>
       <View style={styles.signUpContainer}>
@@ -113,7 +163,7 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     marginBottom: 10,
     paddingHorizontal: 10,
-    backgroundColor: "#FFF", // Ajout d'un fond blanc pour TextInput
+    backgroundColor: "#FFF",
   },
   button: {
     backgroundColor: "#9124B6",
@@ -124,7 +174,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     height: 60,
     width: "100%",
-    display: "flex",
     justifyContent: "center",
     alignItems: "center",
   },
@@ -140,6 +189,12 @@ const styles = StyleSheet.create({
   buttonTextPassword: {
     color: "#EDBBFF",
     textAlign: "right",
+  },
+  blockedText: {
+    color: "red",
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 10,
   },
   signUpContainer: {
     flexDirection: "row",
@@ -161,8 +216,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   logo: {
-    width: "90%", // Prend 70% de la largeur de l'écran
-    aspectRatio: 1.2, // Garde le ratio d'aspect de l'image pour une hauteur proportionnelle
+    width: "90%",
+    aspectRatio: 1.2,
     resizeMode: "contain",
   },
 });

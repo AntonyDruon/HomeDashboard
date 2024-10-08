@@ -1,8 +1,8 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
-import env from "../../env";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const baseUrl = env.REACT_APP_API_BASE_URL;
+import { REACT_APP_API_BASE_URL, REACT_APP_NANOLEAF_IP } from "@env";
+const baseUrl = REACT_APP_API_BASE_URL;
 
 export const roomApiSlice = createApi({
   reducerPath: "roomApi",

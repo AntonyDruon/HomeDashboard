@@ -1,44 +1,53 @@
-import React, { useEffect } from "react";
-import {
-  View,
-  Image,
-  StyleSheet,
-  TouchableOpacity,
-  Button,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Image, StyleSheet, ActivityIndicator } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Font from "expo-font"; // Importer expo-font pour charger les polices
 
 const Splash = ({ navigation }) => {
+  const [fontsLoaded, setFontsLoaded] = useState(false);
+
+  // Charger les polices et vérifier le token
   useEffect(() => {
-    // Simuler un chargement de données ou une tâche asynchrone
-    setTimeout(() => {
-      // Naviguer vers l'écran principal après le chargement
-      checkToken();
-    }, 2000); // Splash screen visible pendant 2 secondes
+    const loadAssets = async () => {
+      await loadFonts(); // Charger les polices
+      checkToken(); // Vérifier le token après chargement des polices
+    };
+
+    loadAssets();
   }, []);
+
+  // Charger les polices
+  const loadFonts = async () => {
+    await Font.loadAsync({
+      "Poppins-Regular": require("../../../assets/fonts/Poppins-Regular.ttf"),
+      "Poppins-Bold": require("../../../assets/fonts/Poppins-Bold.ttf"),
+    });
+    setFontsLoaded(true);
+  };
 
   const checkToken = async () => {
     try {
       const token = await AsyncStorage.getItem("authToken");
       if (token) {
-        console.log(token);
         navigation.replace("Dashboard");
       } else {
-        // Rediriger vers l'écran de connexion si aucun token n'est trouvé
         navigation.replace("SignIn");
       }
     } catch (error) {
       console.error("Error checking token:", error);
-      // En cas d'erreur, rediriger vers l'écran de connexion par défaut
       navigation.replace("SignIn");
     }
   };
+
   return (
     <View style={styles.container}>
       <Image
         source={require("../../../assets/logohomedashboard.png")}
         style={styles.logo}
       />
+      {!fontsLoaded && (
+        <ActivityIndicator size="large" color="#000000" style={styles.loader} />
+      )}
     </View>
   );
 };
@@ -54,6 +63,9 @@ const styles = StyleSheet.create({
     width: 400,
     height: 400,
     resizeMode: "contain",
+  },
+  loader: {
+    marginTop: 20,
   },
 });
 

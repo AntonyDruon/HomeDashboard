@@ -1,38 +1,47 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  TextInput,
   TouchableOpacity,
   Text,
   StyleSheet,
-  Platform,
-  Modal,
   ScrollView,
+  Modal,
+  Platform,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
-import {
-  useCreateNoteMutation,
-  useGetAllNotesQuery,
-} from "../../slice/noteApiSlice";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const Note = ({ navigation }) => {
+const Transport = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
-  const [name, setName] = useState("");
-  const [note, setNote] = useState([]);
-  const { data: getDataNote, refetch } = useGetAllNotesQuery();
-  const [createNote, { isLoading, isSuccess, isError, error }] =
-    useCreateNoteMutation();
+  const [busRoutes, setBusRoutes] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fonction pour appeler l'API et récupérer les données des lignes de bus
+  const fetchBusRoutes = async () => {
+    try {
+      const response = await fetch(
+        "https://prim.iledefrance-mobilites.fr/marketplace/general-info/v1/trafic-lignes",
+        {
+          headers: {
+            Authorization: "Bearer {your_api_key}",
+          },
+        }
+      );
+      const data = await response.json();
+      setBusRoutes(data);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error fetching bus routes:", error);
+      setError(error);
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (getDataNote) {
-      console.log("getDataNote", getDataNote);
-      setNote(getDataNote);
-      refetch();
-      console.log("note", note);
-    }
-  }, [getDataNote]);
+    fetchBusRoutes();
+  }, []);
 
   const showModal = () => {
     setModalVisible(true);
@@ -41,31 +50,6 @@ const Note = ({ navigation }) => {
   const hideModal = () => {
     setModalVisible(false);
   };
-  const navigateToNoteDetail = (note) => {
-    navigation.navigate("NoteDetail", { note });
-  };
-
-  const handleValidate = async () => {
-    try {
-      // Créer un objet contenant le nom de la note
-      const noteData = { name: name };
-
-      // Appeler la fonction de mutation en passant les données
-      const response = await createNote(noteData);
-
-      // Gérer la réponse
-      if (response && response.data && response.data.noteId) {
-        console.log("Note created successfully");
-        refetch();
-      } else {
-        console.error("Error creating note: Response or noteId is undefined.");
-      }
-
-      hideModal();
-    } catch (error) {
-      console.error("Error creating note:", error);
-    }
-  };
 
   const handleSignOut = async () => {
     try {
@@ -73,7 +57,6 @@ const Note = ({ navigation }) => {
       navigation.navigate("SignIn");
     } catch (error) {
       console.error("Error during logout:", error);
-      // Gérer les erreurs de déconnexion
     }
   };
 
@@ -85,24 +68,28 @@ const Note = ({ navigation }) => {
     >
       <TouchableOpacity style={styles.addButton} onPress={showModal}>
         <Icon name="add" size={24} color="white" />
-        <Text style={styles.addButtonText}>Ajouter une liste</Text>
+        <Text style={styles.addButtonText}>Ajouter un trajet</Text>
       </TouchableOpacity>
+
       <View>
-        <Text style={styles.title}>Notes</Text>
+        <Text style={styles.title}>Transport - Ligne de Bus</Text>
       </View>
+
       <ScrollView contentContainerStyle={styles.containerCard}>
-        {Array.isArray(note) && note.length > 0 ? (
-          note.map((note) => (
-            <TouchableOpacity
-              key={note.id_note}
-              style={styles.card}
-              onPress={() => navigateToNoteDetail(note)}
-            >
-              <Text style={styles.cardTitle}>{note.name}</Text>
+        {isLoading ? (
+          <Text style={styles.noRoutesText}>Chargement en cours...</Text>
+        ) : error ? (
+          <Text style={styles.noRoutesText}>
+            Erreur de chargement des données
+          </Text>
+        ) : busRoutes.length > 0 ? (
+          busRoutes.map((route) => (
+            <TouchableOpacity key={route.id} style={styles.card}>
+              <Text style={styles.cardTitle}>{route.name}</Text>
             </TouchableOpacity>
           ))
         ) : (
-          <Text style={styles.noNotesText}>Aucune note disponible</Text>
+          <Text style={styles.noRoutesText}>Aucun trajet disponible</Text>
         )}
       </ScrollView>
 
@@ -124,27 +111,14 @@ const Note = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>
-              Veuillez choisir un nom à votre liste
-            </Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Nom"
-              value={name}
-              onChangeText={setName}
-            />
+            <Text style={styles.modalText}>Ajoutez un nouveau trajet</Text>
             <View style={styles.buttonContainerModal}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleValidate}
-              >
-                <Text style={{ color: "white" }}>Valider</Text>
-              </TouchableOpacity>
               <TouchableOpacity style={styles.modalButton} onPress={hideModal}>
-                <Text style={{ color: "white" }}>Annuler</Text>
+                <Text style={{ color: "white" }}>Fermer</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -160,29 +134,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 10,
   },
-  navbarSync: {
-    borderRadius: 5,
-    width: 250,
-    height: 50,
-    position: "absolute",
-    top: 50,
-    right: 20,
-
-    display: "flex",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  syncBtn: {
-    borderRadius: 5,
-    width: 120,
-    height: 50,
-
-    backgroundColor: "#5E376B",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
@@ -195,29 +146,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "space-between",
-    marginTop: Platform.OS === "android" ? 1 : 20,
-    alignItems: "flex-start",
-    width: "100%",
-    backgroundColor: "#fff",
-  },
-
-  containerCard: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
     marginTop: Platform.OS === "android" ? 10 : 20,
     alignItems: "flex-start",
     width: "100%",
-  },
-  circle: {
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "#53315F",
-    justifyContent: "center",
-    alignItems: "center",
-    alignSelf: "center",
-    marginBottom: 10,
   },
   cardTitle: {
     color: "white",
@@ -298,15 +229,6 @@ const styles = StyleSheet.create({
     marginBottom: 15,
     textAlign: "center",
   },
-  input: {
-    width: "85%",
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 20,
-    paddingHorizontal: 10,
-  },
   buttonContainerModal: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -320,6 +242,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  noRoutesText: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
+  },
 });
 
-export default Note;
+export default Transport;

@@ -12,27 +12,35 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from "react-native-vector-icons/MaterialIcons";
+import { useRoute } from "@react-navigation/native";
 import {
   useCreateNoteMutation,
   useGetAllNotesQuery,
+  useCreateFieldNoteMutation,
+  useGetFieldNoteQuery,
 } from "../../slice/noteApiSlice";
 
-const Note = ({ navigation }) => {
+const NoteDetail = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
   const [name, setName] = useState("");
-  const [note, setNote] = useState([]);
-  const { data: getDataNote, refetch } = useGetAllNotesQuery();
-  const [createNote, { isLoading, isSuccess, isError, error }] =
-    useCreateNoteMutation();
+  const [field, setField] = useState([]);
+  const route = useRoute();
+  const { note } = route.params;
+  const [createNoteField, { isLoading, isSuccess, isError, error }] =
+    useCreateFieldNoteMutation();
+  const { data: getFieldNote, refetch } = useGetFieldNoteQuery(note.id_note);
 
   useEffect(() => {
-    if (getDataNote) {
-      console.log("getDataNote", getDataNote);
-      setNote(getDataNote);
-      refetch();
-      console.log("note", note);
+    console.log("Fetching fields for note ID:", note.id_note);
+    if (getFieldNote) {
+      console.log("getFieldNote", getFieldNote); // Log des données reçues de l'API
+      setField(getFieldNote); // Mise à jour de l'état avec les champs récupérés
     }
-  }, [getDataNote]);
+  }, [getFieldNote, note.id_note]);
+
+  useEffect(() => {
+    console.log("field", field);
+  }, [field]);
 
   const showModal = () => {
     setModalVisible(true);
@@ -41,27 +49,19 @@ const Note = ({ navigation }) => {
   const hideModal = () => {
     setModalVisible(false);
   };
-  const navigateToNoteDetail = (note) => {
-    navigation.navigate("NoteDetail", { note });
-  };
+  //   const navigateToNoteDetail = (note) => {
+  //     navigation.navigate("NoteDetail", { note });
+  //   };
 
   const handleValidate = async () => {
     try {
       // Créer un objet contenant le nom de la note
-      const noteData = { name: name };
-
-      // Appeler la fonction de mutation en passant les données
-      const response = await createNote(noteData);
-
-      // Gérer la réponse
-      if (response && response.data && response.data.noteId) {
-        console.log("Note created successfully");
-        refetch();
-      } else {
-        console.error("Error creating note: Response or noteId is undefined.");
-      }
+      const data = { id_note: note.id_note, title: name };
+      const response = await createNoteField(data).unwrap();
+      console.log("Field created successfully", response);
 
       hideModal();
+      refetch();
     } catch (error) {
       console.error("Error creating note:", error);
     }
@@ -85,28 +85,33 @@ const Note = ({ navigation }) => {
     >
       <TouchableOpacity style={styles.addButton} onPress={showModal}>
         <Icon name="add" size={24} color="white" />
-        <Text style={styles.addButtonText}>Ajouter une liste</Text>
+        <Text style={styles.addButtonText}>Ajouter un élément à la liste</Text>
       </TouchableOpacity>
       <View>
-        <Text style={styles.title}>Notes</Text>
+        <Text style={styles.title}>{note.name}</Text>
       </View>
       <ScrollView contentContainerStyle={styles.containerCard}>
-        {Array.isArray(note) && note.length > 0 ? (
-          note.map((note) => (
-            <TouchableOpacity
-              key={note.id_note}
-              style={styles.card}
-              onPress={() => navigateToNoteDetail(note)}
-            >
-              <Text style={styles.cardTitle}>{note.name}</Text>
-            </TouchableOpacity>
+        {field.length > 0 ? (
+          field.map((item) => (
+            <View key={item.id_field} style={styles.itemContainer}>
+              <Text style={styles.field}>{item.titre}</Text>
+              {/* Affichez d'autres informations de item si nécessaire */}
+            </View>
           ))
         ) : (
-          <Text style={styles.noNotesText}>Aucune note disponible</Text>
+          <Text style={styles.loadingText}>Il n'y a pas de note</Text>
         )}
       </ScrollView>
 
       <View style={styles.navbarbottom}>
+        <TouchableOpacity
+          style={styles.buttonContainer}
+          onPress={() => navigation.navigate("Note")}
+        >
+          <View style={[styles.button, { backgroundColor: "#4F4353" }]}>
+            <Icon name="arrow-back" size={40} color="white" />
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={() => navigation.navigate("Dashboard")}
@@ -128,11 +133,11 @@ const Note = ({ navigation }) => {
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>
-              Veuillez choisir un nom à votre liste
+              Veuillez choisir l'élement à ajouter à {note.name}
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="Nom"
+              placeholder="titre de votre champ"
               value={name}
               onChangeText={setName}
             />
@@ -192,11 +197,12 @@ const styles = StyleSheet.create({
     color: "white",
   },
   containerCard: {
+    display: "flex",
     flexDirection: "row",
-    flexWrap: "wrap",
+
     justifyContent: "space-between",
     marginTop: Platform.OS === "android" ? 1 : 20,
-    alignItems: "flex-start",
+
     width: "100%",
     backgroundColor: "#fff",
   },
@@ -320,6 +326,29 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  itemContainer: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 10,
+    padding: 10,
+    borderRadius: 5,
+    backgroundColor: "#5E376B",
+    width: "100%",
+  },
+  field: {
+    width: "60%",
+    color: "white",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  loadingText: {
+    color: "white",
+    textAlign: "center",
+    fontSize: 20,
+  },
 });
 
-export default Note;
+export default NoteDetail;

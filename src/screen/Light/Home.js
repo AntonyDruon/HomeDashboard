@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
-import env from "../../../env";
-const { NANOLEAF_IP } = env;
+import { NANOLEAF_IP } from "@env";
+
 import {
   View,
   TouchableOpacity,

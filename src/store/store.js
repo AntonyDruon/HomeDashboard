@@ -4,6 +4,8 @@ import { authApiSlice } from "../slice/authApiSlice";
 import { lightApiSlice } from "../slice/lightApiSlice";
 import { roomApiSlice } from "../slice/roomApiSlice";
 import { nanoleafApiSlice } from "../slice/nanoleafApiSlice";
+import { noteApiSlice } from "../slice/noteApiSlice";
+import { todoApiSlice } from "../slice/todoApiSlice";
 
 export default configureStore({
   reducer: {
@@ -12,6 +14,8 @@ export default configureStore({
     lightApi: lightApiSlice.reducer,
     roomApi: roomApiSlice.reducer,
     nanoleafApi: nanoleafApiSlice.reducer,
+    noteApi: noteApiSlice.reducer,
+    todoApi: todoApiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) => {
     return getDefaultMiddleware().concat(
@@ -19,7 +23,9 @@ export default configureStore({
       authApiSlice.middleware,
       lightApiSlice.middleware,
       roomApiSlice.middleware,
-      nanoleafApiSlice.middleware
+      nanoleafApiSlice.middleware,
+      noteApiSlice.middleware,
+      todoApiSlice.middleware
     );
   },
 });

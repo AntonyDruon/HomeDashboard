@@ -42,25 +42,37 @@ const Dashboard = ({ navigation }) => {
           </View>
           <Text style={styles.cardTitle}>Lumières</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Transport")}
+        >
           <View style={styles.circle}>
-            <Icon name="desktop-windows" size={50} color="white" />
+            <Icon name="directions-bus" size={50} color="white" />
           </View>
-          <Text style={styles.cardTitle}>Equipements</Text>
+          <Text style={styles.cardTitle}>Bus</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Todolist")}
+        >
           <View style={styles.circle}>
             <Icon name="check" size={50} color="white" />
           </View>
           <Text style={styles.cardTitle}>To-do list</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Note")}
+        >
           <View style={styles.circle}>
             <Icon name="description" size={50} color="white" />
           </View>
           <Text style={styles.cardTitle}>Notes</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.card}>
+        <TouchableOpacity
+          style={styles.card}
+          onPress={() => navigation.navigate("Calendar")}
+        >
           <View style={styles.circle}>
             <Icon name="date-range" size={50} color="white" />
           </View>
@@ -116,7 +128,7 @@ const styles = StyleSheet.create({
   containerCard: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between", // Utilise space-between pour répartir les cartes uniformément avec de l'espace supplémentaire sur les côtés
+    justifyContent: "space-between",
     marginTop: Platform.OS === "android" ? 1 : 20,
     // Ajoute un padding horizontal pour créer un espacement supplémentaire sur les côtés
     alignItems: "flex-start",
@@ -138,7 +150,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   card: {
-    width: "49%", // Utilise 48% pour laisser un petit espace entre les cartes
+    width: "49%",
     height: Platform.OS === "android" ? 150 : 180,
     borderRadius: 10,
     backgroundColor: "#5E376B",
