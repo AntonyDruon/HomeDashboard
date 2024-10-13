@@ -202,25 +202,44 @@ const Todolist = ({ navigation }) => {
     }
   };
 
-  const showDatePicker = (todo) => {
-    console.log("showDatePicker", todo);
-    setSelectedTodo(todo);
-    setNewDate(new Date(todo.date)); // Sélectionner le todo pour lequel on souhaite changer la date
-    setDatePickerVisible(true); // Ouvrir le DatePicker
-    console.log("datePickerVisible", datePickerVisible);
-  };
+  // const showDatePicker = (todo) => {
+  //   console.log("showDatePicker", todo);
+  //   setSelectedTodo(todo);
+  //   setNewDate(new Date(todo.date)); // Sélectionner le todo pour lequel on souhaite changer la date
+  //   setDatePickerVisible(true); // Ouvrir le DatePicker
+  //   console.log("datePickerVisible", datePickerVisible);
+  // };
 
   const handleDateChange = async (event, selectedDate) => {
-    setDatePickerVisible(false); // Fermer le DatePicker après sélection
     if (selectedDate) {
+      console.log("selectedDate", selectedDate);
+
+      // Créer une date ajustée sans décalage de fuseau horaire
+      const adjustedDate = new Date(
+        selectedDate.getFullYear(),
+        selectedDate.getMonth(),
+        selectedDate.getDate(),
+        12,
+        0,
+        0 // Forcer à midi pour éviter tout problème de décalage
+      );
+
+      console.log("adjustedDate", adjustedDate);
+
       const updatedData = {
         ...selectedTodo,
-        date: selectedDate.toISOString().split("T")[0], // Formater la date
+        date: adjustedDate.toISOString().split("T")[0], // Ne garder que la date sans heure
       };
-      await updateDateTodo({ id_todo: selectedTodo.id_todo, ...updatedData }); // Envoyer la requête de mise à jour
-      refetch(); // Recharger la liste des todos
+
+      await updateDateTodo({
+        id_todo: selectedTodo.id_todo,
+        ...updatedData,
+      }); // Mettre à jour la date
+      refetch(); // Recharger la liste des tâches
     }
+    setDatePickerVisible(false); // Fermer le DatePicker après sélection
   };
+
   return (
     <LinearGradient
       colors={["#421053", "#261B29"]}
@@ -276,12 +295,23 @@ const Todolist = ({ navigation }) => {
                   <Icon name="close" size={25} color="white" />
                 </TouchableOpacity>
 
-                <TouchableOpacity onPress={() => showEditTitleModal(todo)}>
-                  <Text style={styles.cardTitle}>{todo.titre}</Text>
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => showDatePicker(todo)}>
-                  <Text style={styles.cardTime}>{formatDate(todo.date)}</Text>
-                </TouchableOpacity>
+                {/* Utilisation de flexDirection: "row" pour aligner le titre et le DatePicker */}
+                <View style={styles.rowAlignment}>
+                  <TouchableOpacity onPress={() => showEditTitleModal(todo)}>
+                    <Text style={styles.cardTitle}>{todo.titre}</Text>
+                  </TouchableOpacity>
+
+                  {/* DateTimePicker aligné avec le texte */}
+                  <DateTimePicker
+                    value={new Date(todo.date)} // Date actuelle du todo
+                    mode="date"
+                    display="default" // Utilisation du mode 'inline' pour iOS
+                    onChange={(event, selectedDate) => {
+                      handleDateChange(event, selectedDate, todo.id_todo); // Mise à jour de la date
+                    }}
+                    style={styles.datePicker} // Ajout de styles pour alignement
+                  />
+                </View>
 
                 <View style={styles.statusPriorityContainer}>
                   <TouchableOpacity onPress={() => showStatusModal(todo)}>
@@ -473,14 +503,6 @@ const Todolist = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-      {datePickerVisible && (
-        <DateTimePicker
-          value={newDate} // Initialiser avec la date actuelle du todo
-          mode="date"
-          display="default"
-          onChange={handleDateChange} // Gérer le changement de date
-        />
-      )}
     </LinearGradient>
   );
 };
@@ -558,17 +580,23 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
   },
+  rowAlignment: {
+    flexDirection: "column", // Aligner horizontalement
+    // Aligner verticalement
+    // Espacement entre le titre et le DatePicker
+    width: "100%", // Prendre toute la largeur
+    // Un peu de marge verticale
+  },
   cardTitle: {
     fontSize: 24,
     fontWeight: "bold",
     color: "white",
     fontFamily: "Poppins-Bold",
+    width: "60%", // Ajuster la largeur pour laisser de la place au DatePicker
   },
-  cardTime: {
-    marginTop: 5,
-    fontSize: 14,
-    color: "white",
-    fontFamily: "Poppins-Regular",
+  datePicker: {
+    width: "30%", // Ajuster la largeur du DatePicker
+    backgroundColor: "none",
   },
   statusPriorityContainer: {
     flexDirection: "row",
@@ -635,6 +663,7 @@ const styles = StyleSheet.create({
     right: 10,
     top: 10,
   },
+
   input: {
     width: "85%",
     height: 40,

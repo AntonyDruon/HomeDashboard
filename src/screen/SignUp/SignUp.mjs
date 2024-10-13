@@ -72,15 +72,29 @@ const SignUp = ({ navigation }) => {
 
   const confirmSignUp = async () => {
     try {
-      const response = await signUp({ username, email, password });
+      const response = await signUp({ username, email, password }).unwrap(); // unwrap pour accéder directement aux données
+      console.log("Response from signUp:", response);
+
+      // Vérifier la réponse du serveur
       if (response && !response.error) {
-        navigation.navigate("SignIn");
+        if (response.message === "Cet email est déjà utilisé.") {
+          Alert.alert("Erreur", "Cet email est déjà utilisé.");
+        } else {
+          // Redirection vers l'écran de connexion en cas de succès
+          navigation.navigate("SignIn");
+        }
       } else {
         Alert.alert("Erreur", "Un problème est survenu lors de l'inscription.");
       }
     } catch (error) {
       console.error("Erreur d'inscription:", error);
-      Alert.alert("Erreur", "Un problème est survenu lors de l'inscription.");
+
+      // Vérifier si l'erreur contient une réponse spécifique du serveur
+      if (error?.data?.error) {
+        Alert.alert("Erreur", error.data.error); // Affiche l'erreur spécifique retournée par le serveur
+      } else {
+        Alert.alert("Erreur", "Un problème est survenu lors de l'inscription.");
+      }
     } finally {
       setModalVisible(false);
     }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   TextInput,
@@ -9,10 +9,31 @@ import {
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useGetUserRoleQuery } from "../../slice/userApiSlice"; // Importez votre slice
+import { useFocusEffect } from "@react-navigation/native"; // Importez useFocusEffect
 
 import Icon from "react-native-vector-icons/MaterialIcons";
 
 const Dashboard = ({ navigation }) => {
+  const [userRole, setUserRole] = useState(null); // État pour stocker le rôle de l'utilisateur
+
+  const { data: userData, refetch } = useGetUserRoleQuery();
+
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("Dashboard is focused");
+      refetch(); // Re-fetch data every time the screen is focused
+    }, [])
+  );
+
+  useEffect(() => {
+    if (userData) {
+      console.log("Role récupéré :", userData);
+      setUserRole(userData.role);
+    } else {
+      console.log("data undefined");
+    }
+  }, [userData]);
   const handleSignOut = async () => {
     try {
       await AsyncStorage.removeItem("authToken");
@@ -97,6 +118,16 @@ const Dashboard = ({ navigation }) => {
             <Icon name="home" size={40} color="white" />
           </View>
         </TouchableOpacity>
+        {userRole === "admin" && (
+          <TouchableOpacity
+            style={styles.buttonContainer}
+            onPress={() => navigation.navigate("Admin")}
+          >
+            <View style={[styles.button, { backgroundColor: "#4F4353" }]}>
+              <Icon name="supervisor-account" size={40} color="white" />
+            </View>
+          </TouchableOpacity>
+        )}
         <TouchableOpacity
           style={styles.buttonContainer}
           onPress={handleSignOut}

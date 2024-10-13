@@ -20,6 +20,8 @@ import Calendar from "./src/screen/Calendar/Calendar";
 import Todolist from "./src/screen/Todolist/Todolist";
 import DailyTasks from "./src/screen/Calendar/DailyTasks";
 import Transport from "./src/screen/Transport/Transport";
+import Admin from "./src/screen/Admin/Admin";
+import UserManagement from "./src/screen/Admin/UserManagement.js";
 import { setLocale } from "./src/utils/setLocale";
 
 setLocale();
@@ -101,6 +103,16 @@ const App = () => {
           <Stack.Screen
             name="Transport"
             component={Transport}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="Admin"
+            component={Admin}
+            options={{ headerShown: false }}
+          />
+          <Stack.Screen
+            name="UserManagement"
+            component={UserManagement}
             options={{ headerShown: false }}
           />
         </Stack.Navigator>
