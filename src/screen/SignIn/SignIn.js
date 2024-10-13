@@ -48,8 +48,8 @@ const LoginScreen = ({ navigation }) => {
     } catch (error) {
       setAttempts((prev) => prev + 1); // Incrémenter le nombre de tentatives
 
-      if ((attempts + 1) % 3 === 0) {
-        blockLogin(); // Bloquer après chaque série de 3 tentatives
+      if ((attempts + 1) % 5 === 0) {
+        blockLogin(); // Bloquer après chaque série de 5 tentatives
       } else {
         Alert.alert("Erreur de connexion", "Email ou mot de passe incorrect.");
       }
@@ -64,7 +64,7 @@ const LoginScreen = ({ navigation }) => {
     // Décompte du temps d'attente
     const interval = setInterval(() => {
       setRemainingTime((time) => {
-        if (time <= 1) {
+        if (time <= 5) {
           clearInterval(interval);
           setIsBlocked(false);
           setPenaltyTime((prevTime) => prevTime * 3); // Multiplie le temps de blocage par 3

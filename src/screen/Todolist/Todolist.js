@@ -18,6 +18,8 @@ import {
   useGetAllTodosQuery,
   useDeleteTodoMutation,
   useUpdateTodoMutation,
+  useUpdateTitleTodoMutation,
+  useUpdateDateTodoMutation,
 } from "../../slice/todoApiSlice";
 
 const Todolist = ({ navigation }) => {
@@ -32,11 +34,17 @@ const Todolist = ({ navigation }) => {
   const [priorite, setPriorite] = useState("bas");
   const [date, setDate] = useState(new Date());
   const [todos, setTodos] = useState([]);
+  const [editTitleModalVisible, setEditTitleModalVisible] = useState(false); // État pour la modale d'édition du titre
+  const [newTitle, setNewTitle] = useState(""); // État pour le nouveau titre
+  const [newDate, setNewDate] = useState(new Date()); // État pour la nouvelle date sélectionnée
+  const [datePickerVisible, setDatePickerVisible] = useState(false); // État pour gérer la visibilité du DatePicker
+
   const { data: getAllTodos, refetch } = useGetAllTodosQuery();
   const [createTodo] = useCreateTodoMutation();
   const [deleteTodo] = useDeleteTodoMutation();
   const [updateTodo] = useUpdateTodoMutation();
-
+  const [updateTitleTodo] = useUpdateTitleTodoMutation();
+  const [updateDateTodo] = useUpdateDateTodoMutation();
   useEffect(() => {
     if (getAllTodos) {
       setTodos(getAllTodos);
@@ -85,6 +93,7 @@ const Todolist = ({ navigation }) => {
         date: currentDate,
         updated_at,
       };
+      console.log("updatedTodo", updatedTodo);
       await updateTodo({ id_todo: todoId, ...updatedTodo });
       refetch();
     } catch (error) {
@@ -174,7 +183,44 @@ const Todolist = ({ navigation }) => {
     setActiveButton(buttonType);
     setShowCompleted(buttonType === "completed");
   };
+  const showEditTitleModal = (todo) => {
+    setSelectedTodo(todo); // Sélectionner le todo actuel
+    setNewTitle(todo.titre); // Remplir l'input avec le titre actuel
+    setEditTitleModalVisible(true); // Ouvrir la modale d'édition
+  };
 
+  const handleEditTitle = async () => {
+    if (selectedTodo && newTitle) {
+      console.log("newTitle", newTitle);
+      const updatedData = {
+        ...selectedTodo,
+        titre: newTitle,
+      };
+      await updateTitleTodo({ id_todo: selectedTodo.id_todo, ...updatedData });
+      refetch();
+      setEditTitleModalVisible(false); // Fermer la modale après validation
+    }
+  };
+
+  const showDatePicker = (todo) => {
+    console.log("showDatePicker", todo);
+    setSelectedTodo(todo);
+    setNewDate(new Date(todo.date)); // Sélectionner le todo pour lequel on souhaite changer la date
+    setDatePickerVisible(true); // Ouvrir le DatePicker
+    console.log("datePickerVisible", datePickerVisible);
+  };
+
+  const handleDateChange = async (event, selectedDate) => {
+    setDatePickerVisible(false); // Fermer le DatePicker après sélection
+    if (selectedDate) {
+      const updatedData = {
+        ...selectedTodo,
+        date: selectedDate.toISOString().split("T")[0], // Formater la date
+      };
+      await updateDateTodo({ id_todo: selectedTodo.id_todo, ...updatedData }); // Envoyer la requête de mise à jour
+      refetch(); // Recharger la liste des todos
+    }
+  };
   return (
     <LinearGradient
       colors={["#421053", "#261B29"]}
@@ -230,8 +276,12 @@ const Todolist = ({ navigation }) => {
                   <Icon name="close" size={25} color="white" />
                 </TouchableOpacity>
 
-                <Text style={styles.cardTitle}>{todo.titre}</Text>
-                <Text style={styles.cardTime}>{formatDate(todo.date)}</Text>
+                <TouchableOpacity onPress={() => showEditTitleModal(todo)}>
+                  <Text style={styles.cardTitle}>{todo.titre}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => showDatePicker(todo)}>
+                  <Text style={styles.cardTime}>{formatDate(todo.date)}</Text>
+                </TouchableOpacity>
 
                 <View style={styles.statusPriorityContainer}>
                   <TouchableOpacity onPress={() => showStatusModal(todo)}>
@@ -389,6 +439,48 @@ const Todolist = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+
+      {/* Modale pour modifier le titre */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editTitleModalVisible}
+        onRequestClose={() => setEditTitleModalVisible(false)}
+      >
+        <View style={styles.centeredView}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Modifier le titre</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Nouveau titre"
+              value={newTitle}
+              onChangeText={setNewTitle}
+            />
+            <View style={styles.buttonContainerModal}>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={handleEditTitle}
+              >
+                <Text style={{ color: "white" }}>Valider</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.modalButton}
+                onPress={() => setEditTitleModalVisible(false)}
+              >
+                <Text style={{ color: "white" }}>Annuler</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+      {datePickerVisible && (
+        <DateTimePicker
+          value={newDate} // Initialiser avec la date actuelle du todo
+          mode="date"
+          display="default"
+          onChange={handleDateChange} // Gérer le changement de date
+        />
+      )}
     </LinearGradient>
   );
 };
@@ -417,6 +509,10 @@ const styles = StyleSheet.create({
   scrollView: {
     flex: 1,
     marginBottom: 80,
+  },
+  buttonText: {
+    color: "white",
+    fontSize: 16,
   },
   toggleButton: {
     backgroundColor: "#4F4353",

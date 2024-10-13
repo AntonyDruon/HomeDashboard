@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
 
 import { REACT_APP_API_BASE_URL, REACT_APP_NANOLEAF_IP } from "@env";
 const baseUrl = REACT_APP_API_BASE_URL;
-console.log("baseurl", baseUrl);
+console.log("baseurlauth", baseUrl);
 
 export const authApiSlice = createApi({
   reducerPath: "authApi",

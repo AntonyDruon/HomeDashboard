@@ -18,52 +18,81 @@ import {
   useGetAllNotesQuery,
   useCreateFieldNoteMutation,
   useGetFieldNoteQuery,
+  useDeleteFieldNoteMutation,
+  useUpdateFieldNoteMutation,
 } from "../../slice/noteApiSlice";
 
 const NoteDetail = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [name, setName] = useState("");
+  const [selectedFieldId, setSelectedFieldId] = useState(null);
   const [field, setField] = useState([]);
   const route = useRoute();
   const { note } = route.params;
-  const [createNoteField, { isLoading, isSuccess, isError, error }] =
-    useCreateFieldNoteMutation();
+
+  const [createNoteField] = useCreateFieldNoteMutation();
+  const [deleteFieldNote] = useDeleteFieldNoteMutation();
+  const [updateFieldNote] = useUpdateFieldNoteMutation();
   const { data: getFieldNote, refetch } = useGetFieldNoteQuery(note.id_note);
 
   useEffect(() => {
-    console.log("Fetching fields for note ID:", note.id_note);
     if (getFieldNote) {
-      console.log("getFieldNote", getFieldNote); // Log des données reçues de l'API
-      setField(getFieldNote); // Mise à jour de l'état avec les champs récupérés
+      setField(getFieldNote);
     }
-  }, [getFieldNote, note.id_note]);
-
-  useEffect(() => {
-    console.log("field", field);
-  }, [field]);
+  }, [getFieldNote]);
 
   const showModal = () => {
+    setIsEditMode(false); // Nouveau champ
+    setName("");
+    setModalVisible(true);
+  };
+
+  const showEditModal = (item) => {
+    setIsEditMode(true); // Modifier un champ existant
+    setSelectedFieldId(item.id_field);
+    setName(item.titre);
     setModalVisible(true);
   };
 
   const hideModal = () => {
     setModalVisible(false);
+    setSelectedFieldId(null);
   };
-  //   const navigateToNoteDetail = (note) => {
-  //     navigation.navigate("NoteDetail", { note });
-  //   };
 
   const handleValidate = async () => {
-    try {
-      // Créer un objet contenant le nom de la note
-      const data = { id_note: note.id_note, title: name };
-      const response = await createNoteField(data).unwrap();
-      console.log("Field created successfully", response);
+    if (isEditMode && selectedFieldId) {
+      // Modifier un champ existant
+      try {
+        const data = { id_field: selectedFieldId, title: name };
+        const response = await updateFieldNote(data).unwrap();
+        console.log("Field updated successfully", response);
+        hideModal();
+        refetch();
+      } catch (error) {
+        console.error("Error updating field:", error);
+      }
+    } else {
+      // Ajouter un nouveau champ
+      try {
+        const data = { id_note: note.id_note, title: name };
+        const response = await createNoteField(data).unwrap();
+        console.log("Field created successfully", response);
+        hideModal();
+        refetch();
+      } catch (error) {
+        console.error("Error creating note:", error);
+      }
+    }
+  };
 
-      hideModal();
+  const handleDelete = async (id_field) => {
+    try {
+      await deleteFieldNote({ id_field });
+      console.log("Field deleted successfullyyyyyyyyyyyyyyyyyyyy");
       refetch();
     } catch (error) {
-      console.error("Error creating note:", error);
+      console.error("Error deleting field:", error);
     }
   };
 
@@ -73,7 +102,6 @@ const NoteDetail = ({ navigation }) => {
       navigation.navigate("SignIn");
     } catch (error) {
       console.error("Error during logout:", error);
-      // Gérer les erreurs de déconnexion
     }
   };
 
@@ -95,7 +123,14 @@ const NoteDetail = ({ navigation }) => {
           field.map((item) => (
             <View key={item.id_field} style={styles.itemContainer}>
               <Text style={styles.field}>{item.titre}</Text>
-              {/* Affichez d'autres informations de item si nécessaire */}
+              <View style={styles.iconContainer}>
+                <TouchableOpacity onPress={() => showEditModal(item)}>
+                  <Icon name="edit" size={24} color="white" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(item.id_field)}>
+                  <Icon name="delete" size={24} color="red" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         ) : (
@@ -129,15 +164,19 @@ const NoteDetail = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Modale pour ajouter/modifier un champ */}
       <Modal animationType="slide" transparent={true} visible={modalVisible}>
         <View style={styles.centeredView}>
           <View style={styles.modalView}>
             <Text style={styles.modalText}>
-              Veuillez choisir l'élement à ajouter à {note.name}
+              {isEditMode
+                ? "Modifier l'élément"
+                : `Ajouter un élément à ${note.name}`}
             </Text>
             <TextInput
               style={styles.input}
-              placeholder="titre de votre champ"
+              placeholder="Titre de votre champ"
               value={name}
               onChangeText={setName}
             />
@@ -146,7 +185,9 @@ const NoteDetail = ({ navigation }) => {
                 style={styles.modalButton}
                 onPress={handleValidate}
               >
-                <Text style={{ color: "white" }}>Valider</Text>
+                <Text style={{ color: "white" }}>
+                  {isEditMode ? "Modifier" : "Valider"}
+                </Text>
               </TouchableOpacity>
               <TouchableOpacity style={styles.modalButton} onPress={hideModal}>
                 <Text style={{ color: "white" }}>Annuler</Text>
@@ -348,6 +389,11 @@ const styles = StyleSheet.create({
     color: "white",
     textAlign: "center",
     fontSize: 20,
+  },
+  iconContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    width: 60,
   },
 });
 
