@@ -14,7 +14,6 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import logo from "../../../assets/logohomedashboarddarkmode.png";
 import { useSignUpMutation } from "../../slice/userApiSlice";
-import Icon from "react-native-vector-icons/MaterialIcons";
 
 const SignUp = ({ navigation }) => {
   const [username, setFullName] = useState("");
@@ -98,10 +97,6 @@ const SignUp = ({ navigation }) => {
     } finally {
       setModalVisible(false);
     }
-  };
-
-  const goToSignIn = () => {
-    navigation.replace("SignIn");
   };
 
   return (
