@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withAuthRedirect } from "./withAuthRedirect";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { REACT_APP_API_BASE_URL, REACT_APP_NANOLEAF_IP } from "@env";
 const baseUrl = REACT_APP_API_BASE_URL;
@@ -7,7 +8,7 @@ const nanoleafIP = REACT_APP_NANOLEAF_IP;
 
 export const lightApiSlice = createApi({
   reducerPath: "lightApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withAuthRedirect(fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       // Récupérer le token JWT depuis AsyncStorage
@@ -17,7 +18,7 @@ export const lightApiSlice = createApi({
       }
       return headers;
     },
-  }),
+  })),
   endpoints: (builder) => ({
     getBridgeIP: builder.query({
       query: () => ({

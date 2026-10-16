@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withAuthRedirect } from "./withAuthRedirect";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { REACT_APP_API_BASE_URL } from "@env";
 
@@ -6,7 +7,7 @@ const baseUrl = REACT_APP_API_BASE_URL;
 
 export const userApiSlice = createApi({
   reducerPath: "userApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withAuthRedirect(fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       const token = await AsyncStorage.getItem("authToken");
@@ -18,7 +19,7 @@ export const userApiSlice = createApi({
 
       return headers;
     },
-  }),
+  })),
   endpoints: (builder) => ({
     signUp: builder.mutation({
       query: ({ username, email, password }) => ({

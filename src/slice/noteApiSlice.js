@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withAuthRedirect } from "./withAuthRedirect";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { REACT_APP_API_BASE_URL } from "@env";
 
@@ -6,7 +7,7 @@ const baseUrl = REACT_APP_API_BASE_URL;
 
 export const noteApiSlice = createApi({
   reducerPath: "noteApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withAuthRedirect(fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       // Récupérer le token JWT depuis AsyncStorage
@@ -16,7 +17,7 @@ export const noteApiSlice = createApi({
       }
       return headers;
     },
-  }),
+  })),
   endpoints: (builder) => ({
     // Endpoint pour récupérer toutes les notes
     getAllNotes: builder.query({

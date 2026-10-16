@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withAuthRedirect } from "./withAuthRedirect";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { REACT_APP_API_BASE_URL, REACT_APP_NANOLEAF_IP } from "@env";
 const baseUrl = REACT_APP_API_BASE_URL;
 console.log("baseurltodo", baseUrl);
 export const todoApiSlice = createApi({
   reducerPath: "todoApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withAuthRedirect(fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       const token = await AsyncStorage.getItem("authToken");
@@ -14,7 +15,7 @@ export const todoApiSlice = createApi({
       }
       return headers;
     },
-  }),
+  })),
   endpoints: (builder) => ({
     getAllTodos: builder.query({
       query: () => ({

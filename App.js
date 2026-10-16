@@ -28,12 +28,13 @@ setLocale();
 
 const Stack = createStackNavigator();
 
-import store from "../HomeDashboard/src/store/store";
+import store from "./src/store/store";
+import { navigationRef } from "./src/navigation/navigationRef";
 
 const App = () => {
   return (
     <Provider store={store}>
-      <NavigationContainer>
+      <NavigationContainer ref={navigationRef}>
         <Stack.Navigator>
           <Stack.Screen
             name="Splash"

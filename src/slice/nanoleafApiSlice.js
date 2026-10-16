@@ -1,4 +1,5 @@
 import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { withAuthRedirect } from "./withAuthRedirect";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { get } from "react-native/Libraries/TurboModule/TurboModuleRegistry";
 import { REACT_APP_API_BASE_URL, REACT_APP_NANOLEAF_IP } from "@env";
@@ -8,7 +9,7 @@ const nanoleafIP = REACT_APP_NANOLEAF_IP;
 
 export const nanoleafApiSlice = createApi({
   reducerPath: "nanoleafApi",
-  baseQuery: fetchBaseQuery({
+  baseQuery: withAuthRedirect(fetchBaseQuery({
     baseUrl,
     prepareHeaders: async (headers) => {
       // Récupérer le token JWT depuis AsyncStorage
@@ -18,7 +19,7 @@ export const nanoleafApiSlice = createApi({
       }
       return headers;
     },
-  }),
+  })),
   endpoints: (builder) => ({
     getTokenNanoleaf: builder.mutation({
       query: () => ({
