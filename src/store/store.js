@@ -6,6 +6,7 @@ import { roomApiSlice } from "../slice/roomApiSlice";
 import { nanoleafApiSlice } from "../slice/nanoleafApiSlice";
 import { noteApiSlice } from "../slice/noteApiSlice";
 import { todoApiSlice } from "../slice/todoApiSlice";
+import { transportApiSlice } from "../slice/transportApiSlice";
 
 export default configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export default configureStore({
     [nanoleafApiSlice.reducerPath]: nanoleafApiSlice.reducer,
     [noteApiSlice.reducerPath]: noteApiSlice.reducer,
     [todoApiSlice.reducerPath]: todoApiSlice.reducer,
+    [transportApiSlice.reducerPath]: transportApiSlice.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -25,6 +27,7 @@ export default configureStore({
       roomApiSlice.middleware,
       nanoleafApiSlice.middleware,
       noteApiSlice.middleware,
-      todoApiSlice.middleware
+      todoApiSlice.middleware,
+      transportApiSlice.middleware
     ),
 });
